@@ -57,8 +57,8 @@ app.get('/test2', async (c) => {
     message: ``,
   };
   try {
-    const testRepository = AppDataSource.getRepository(TTest1Child);
-    const data = await testRepository.find();
+    const testRepository = AppDataSource.getRepository(TTest1);
+    const data = await testRepository.find({ relations: { tTest1Children: true } });
     result.data = data
     return c.json(result);
   } catch (error: any) {

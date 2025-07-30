@@ -99,8 +99,11 @@ app.post('/save', async (c) => {
       return c.json(result)
     }
 
+    oldData.title = title;
+    oldData.content = content;
+
     // 새로운 데이터 저장 commit
-    let data = await testRepository.save(newData);
+    let data = await testRepository.save(oldData);
     result.data = data
     return c.json(result);
   } catch (error: any) {

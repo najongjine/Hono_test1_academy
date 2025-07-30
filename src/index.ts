@@ -155,6 +155,27 @@ app.post('/save', async (c) => {
   }
 });
 
+app.post('/delete', async (c) => {
+  let result: { success: boolean; data: any; code: string; message: string } = {
+    success: true,
+    data: null,
+    code: "",
+    message: ``,
+  };
+  try {
+    // body 에서 데이터 꺼내기
+    const body = await c?.req?.json();
+    let id = Number(body?.id ?? 0);
+    const testRepository = AppDataSource.getRepository(TTest1);
+    await testRepository.delete({ id: id })
+    return c.json(result);
+  } catch (error: any) {
+    result.success = false;
+    result.message = `error. ${error?.message ?? ""}`
+    return c.json(result)
+  }
+});
+
 serve({
   fetch: app.fetch,
   port: 3000

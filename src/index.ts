@@ -67,6 +67,10 @@ app.get('/test2', async (c) => {
     return c.json(result)
   }
 });
+
+/**
+ C : 요청, 응답을 기능들이 있는 객체 
+ */
 app.post('/save', async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
@@ -77,13 +81,24 @@ app.post('/save', async (c) => {
   try {
     // body 에서 데이터 꺼내기
     const body = await c?.req?.json();
-    let title = body?.title ?? "";
-    let content = body?.content ?? "";
+    let id = Number(body?.id ?? 0);
+    let title = String(body?.title ?? "");
+    let content = String(body?.content ?? "");
     const testRepository = AppDataSource.getRepository(TTest1);
-    // 새로운 데이터 만들기
-    let newData = new TTest1();
-    newData.title = title;
-    newData.content = content;
+
+    /**
+    TTest1 테이블에서 id 가 body에서 받은 id랑 똑같은 값을 가진 데이터를 하나 찾아와.
+    없으면, 그냥 데이터 새로 만들어.
+     */
+    let oldData = await testRepository.findOne({ where: { id: id } }) ??
+      new TTest1();
+    // 예외처리
+    if (id && !oldData?.id) {
+      result.success = false;
+      result.message = `없는 데이터를 수정하려고 합니다. 반려 처리 하겠습니다`
+      return c.json(result)
+    }
+
     // 새로운 데이터 저장 commit
     let data = await testRepository.save(newData);
     result.data = data

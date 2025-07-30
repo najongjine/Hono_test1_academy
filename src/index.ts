@@ -68,6 +68,48 @@ app.get('/test2', async (c) => {
   }
 });
 
+app.get('/raw_query', async (c) => {
+  let result: { success: boolean; data: any; code: string; message: string } = {
+    success: true,
+    data: null,
+    code: "",
+    message: ``,
+  };
+  try {
+    let data = await AppDataSource.sql`
+SELECT
+t1.id
+,t1.title
+,t1.content
+,t1.created_dt
+,COALESCE(
+  json_agg(
+    json_build_object(
+      't1c_id', t1c.id,
+      't1c_comment', t1c.comment,
+      't1c_created_dt', t1c.created_dt
+    )
+  ) FILTER (WHERE t1c.id IS NOT NULL),
+  '[]'
+) AS childs
+
+FROM t_test1 AS t1
+LEFT JOIN t_test1_child t1c ON t1.id = t1c.test1_id
+WHERE 1=1
+GROUP BY t1.id
+ORDER BY t1.id ASC
+OFFSET (${1} - 1) * ${100}
+LIMIT ${100}
+    `;
+    result.data = data
+    return c.json(result);
+  } catch (error: any) {
+    result.success = false;
+    result.message = `error. ${error?.message ?? ""}`
+    return c.json(result)
+  }
+});
+
 /**
  C : 요청, 응답을 기능들이 있는 객체 
  */

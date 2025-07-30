@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext", // 유지
+    "moduleResolution": "NodeNext", // 🔹 TypeORM ESM 지원
+    "esModuleInterop": true, // 🔹 TypeORM import compatibility
+    "resolveJsonModule": true, // 🔹 ormconfig.json 등 JSON 사용 가능
+    "experimentalDecorators": true, // 🔹 TypeORM 데코레이터 지원
+    "emitDecoratorMetadata": true, // 🔹 TypeORM 메타데이터 필요
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "outDir": "./dist"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

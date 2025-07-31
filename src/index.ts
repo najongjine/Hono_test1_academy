@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { AppDataSource } from "./data-source1.js";
+import { cors } from "hono/cors";
 import * as dotenv from "dotenv";
 import { TTest1 } from './entities/TTest1.js';
 import { error } from 'console';
@@ -10,6 +11,8 @@ const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".en
 dotenv.config({ path: envFile });
 
 const app = new Hono()
+
+app.use(cors());
 
 /** DB 연결 */
 AppDataSource.initialize()
@@ -30,7 +33,7 @@ app.get('/', (c) => {
  async : 비동기 환경에서, db 접속같이 시간이 걸리는것도
  기다리게 해주는놈
  */
-app.get('/test', async (c) => {
+app.get('/api/test', async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,
@@ -126,6 +129,8 @@ app.post('/save', async (c) => {
     let id = Number(body?.id ?? 0);
     let title = String(body?.title ?? "");
     let content = String(body?.content ?? "");
+    let items = body?.items;
+    console.log(`items : `, items)
     const testRepository = AppDataSource.getRepository(TTest1);
 
     /**
@@ -178,7 +183,7 @@ app.post('/delete', async (c) => {
 
 serve({
   fetch: app.fetch,
-  port: 3000
+  port: 3001
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`)
 })

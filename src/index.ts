@@ -116,7 +116,7 @@ LIMIT ${100}
 /**
  C : 요청, 응답을 기능들이 있는 객체 
  */
-app.post('/save', async (c) => {
+app.post('/api/save', async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,

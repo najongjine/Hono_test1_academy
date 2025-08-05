@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 //@ts-ignore
 import path from "path";
 import { AppDataSource } from '../data-source1';
+import { TFiles } from '../entities/TFiles';
 
 const router = new Hono();
 
@@ -89,7 +90,7 @@ router.post('/local_upload', async (c) => {
         console.log(`## imageUrlList: `, imageUrlList)
         if (imageUrlList && imageUrlList?.length > 0) {
             // db 에 데이터 저장하기
-            const fileRepository = AppDataSource.getRepository()
+            const fileRepository = AppDataSource.getRepository(TFiles)
         }
         return c.json(result);
     } catch (error: any) {

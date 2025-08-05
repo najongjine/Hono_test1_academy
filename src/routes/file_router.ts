@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "fs";
 import { v4 as uuidv4 } from "uuid";
 //@ts-ignore
 import path from "path";
+import { AppDataSource } from '../data-source1';
 
 const router = new Hono();
 
@@ -18,7 +19,7 @@ interface FileMeta {
     file_size: number;        // 파일 크기 (바이트 단위)
 }
 
-router.get('/local_upload', async (c) => {
+router.post('/local_upload', async (c) => {
     let result: { success: boolean; data: any; code: string; message: string } = {
         success: true,
         data: null,
@@ -65,7 +66,7 @@ router.get('/local_upload', async (c) => {
             const mimeType = fileBlob.type;
             const fileSize = fileBlob.size;
             // ✅ 디스크에 파일 저장
-            //writeFileSync(filePath, buffer);
+            writeFileSync(filePath, buffer);
 
             /**
              * interface FileMeta {
@@ -87,7 +88,8 @@ router.get('/local_upload', async (c) => {
         }
         console.log(`## imageUrlList: `, imageUrlList)
         if (imageUrlList && imageUrlList?.length > 0) {
-
+            // db 에 데이터 저장하기
+            const fileRepository = AppDataSource.getRepository()
         }
         return c.json(result);
     } catch (error: any) {

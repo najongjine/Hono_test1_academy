@@ -90,8 +90,22 @@ router.post('/local_upload', async (c) => {
         console.log(`## imageUrlList: `, imageUrlList)
         if (imageUrlList && imageUrlList?.length > 0) {
             // db 에 데이터 저장하기
-            const fileRepository = AppDataSource.getRepository(TFiles)
+            const fileRepository = AppDataSource.getRepository(TFiles);
+            for (const element of imageUrlList) {
+                // 데이터 만드는 코드
+                let newfile = new TFiles();
+                newfile.filePath = element.file_path;
+                //데이터 더 채워주기
+                newfile.fileSize = element.file_size + "";
+                newfile.mimeType = element.mime_type;
+                newfile.originalName = element.original_name;
+                newfile.storedName = element.stored_name;
+                // 진짜 save 해주기
+                await fileRepository.save(newfile);
+            }
+
         }
+        result.data = imageUrlList;
         return c.json(result);
     } catch (error: any) {
         result.success = false;

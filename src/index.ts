@@ -6,6 +6,7 @@ import * as dotenv from "dotenv";
 import { TTest1 } from './entities/TTest1.js';
 import { error } from 'console';
 import { TTest1Child } from './entities/TTest1Child.js';
+import fileRouter from "./routes/file_router.js"
 
 const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
 dotenv.config({ path: envFile });
@@ -180,6 +181,8 @@ app.post('/delete', async (c) => {
     return c.json(result)
   }
 });
+
+app.route('/api/file', fileRouter);
 
 serve({
   fetch: app.fetch,

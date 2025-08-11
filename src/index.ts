@@ -8,6 +8,9 @@ import { error } from 'console';
 import { TTest1Child } from './entities/TTest1Child.js';
 import fileRouter from "./routes/file_router.js"
 
+import { LMStudioClient } from "@lmstudio/sdk";
+const client = new LMStudioClient();
+
 const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
 dotenv.config({ path: envFile });
 
@@ -42,9 +45,9 @@ app.get('/api/test', async (c) => {
     message: ``,
   };
   try {
-    const testRepository = AppDataSource.getRepository(TTest1);
-    const data = await testRepository.find();
-    result.data = data
+    const q = String(c.req.query("q") ?? "");
+    const model = await client.llm.model("google/gemma-3-1B-it-QAT");
+    const result = await model.respond(q);
     return c.json(result);
   } catch (error: any) {
     result.success = false;
@@ -90,6 +93,7 @@ t1.id
   json_agg(
     json_build_object(
       't1c_id', t1c.id,
+      
       't1c_comment', t1c.comment,
       't1c_created_dt', t1c.created_dt
     )

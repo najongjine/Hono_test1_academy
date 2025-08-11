@@ -7,6 +7,7 @@ import { TTest1 } from './entities/TTest1.js';
 import { error } from 'console';
 import { TTest1Child } from './entities/TTest1Child.js';
 import fileRouter from "./routes/file_router.js"
+import testRouter from "./routes/test_router.js"
 
 import { LMStudioClient } from "@lmstudio/sdk";
 const client = new LMStudioClient();
@@ -46,7 +47,7 @@ app.get('/api/test', async (c) => {
   };
   try {
     const q = String(c.req.query("q") ?? "");
-    const model = await client.llm.model("google/gemma-3-1B-it-QAT");
+    const model = await client.llm.model("google/gemma-3-1B");
     const result = await model.respond(q);
     return c.json(result);
   } catch (error: any) {
@@ -187,6 +188,7 @@ app.post('/delete', async (c) => {
 });
 
 app.route('/api/file', fileRouter);
+app.route('/api/test', testRouter);
 
 serve({
   fetch: app.fetch,

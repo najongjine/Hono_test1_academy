@@ -43,8 +43,6 @@ router.get("/save_embedding_to_db", async (c) => {
     message: ``,
   };
   try {
-    const q = String(c.req.query("q") ?? "");
-
     const queryText = String(c.req.query("q") ?? "기본 쿼리 텍스트"); // 쿼리 파라미터 'q'를 사용
 
     // 1. 외부 API URL 및 요청 Body 설정
@@ -114,6 +112,99 @@ router.get("/save_embedding_to_db", async (c) => {
         first_5_values: embeddingVector.slice(0, 5), // 데이터 확인용으로 앞 5개만 반환
       };
       result.message = `임베딩을 성공적으로 받아왔습니다. 벡터 길이: ${embeddingVector.length}`;
+    } else {
+      // API 응답은 성공(HTTP 200)했지만, 내부 success 플래그가 false인 경우
+      throw new Error(
+        `임베딩 API 내부 오류: ${apiResponse.msg || "알 수 없는 응답"}`
+      );
+    }
+
+    return c.json(result);
+  } catch (error: any) {
+    result.success = false;
+    result.message = `error. ${error?.message ?? ""}`;
+    return c.json(result);
+  }
+});
+
+router.get("/postgres_embedding_search", async (c) => {
+  let result: { success: boolean; data: any; code: string; message: string } = {
+    success: true,
+    data: null,
+    code: "",
+    message: ``,
+  };
+  try {
+    const queryText = String(c.req.query("q") ?? "기본 쿼리 텍스트"); // 쿼리 파라미터 'q'를 사용
+
+    // 1. 외부 API URL 및 요청 Body 설정
+    const apiUrl =
+      "https://wildojisan-embeddinggemma-300m-fastapi.hf.space/make_text_embedding";
+    const requestBody = {
+      query: queryText,
+      documents: [queryText], // 쿼리 텍스트와 동일한 문서를 임베딩하도록 설정
+    };
+
+    // 2. 외부 API에 POST 요청 보내기
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    // 3. 응답 상태 코드 확인 및 오류 처리
+    if (!response.ok) {
+      throw new Error(`API 요청 실패. HTTP 상태 코드: ${response.status}`);
+    }
+
+    // 4. 응답 본문 파싱
+    const apiResponse: EmbeddingResponse = await response.json();
+
+    // 5. 파싱된 데이터 확인 및 처리
+    if (
+      apiResponse.success &&
+      apiResponse.data &&
+      apiResponse.data.length > 0
+    ) {
+      // 임베딩 벡터 (첫 번째 문서의 임베딩)
+      const embeddingVector = apiResponse.data[0];
+
+      // =======================================================
+      // ⭐️ AppDataSource.query()를 사용한 Raw SQL 저장 로직
+      // =======================================================
+
+      // 1. 벡터 배열을 pgvector가 인식할 수 있는 문자열 형식으로 변환합니다.
+      //    예: [0.12, -0.45, 0.78, ...]  ->  '[0.12, -0.45, 0.78]'
+      const vectorString = `[${embeddingVector.join(",")}]`;
+
+      // 코사인 유사도 0.8 이상인 레코드를 찾는 쿼리 (코사인 거리 0.2 이하) 코사인 유사도가 1.0 (완전히 동일) → 코사인 거리는 0.0
+      const selectQuery = `
+    SELECT
+        id,
+        content,
+        embedding <=> $1 AS distance_score 
+    FROM
+        t_vector_test1
+    WHERE
+      (embedding <=> $1 ) <= 0.2 
+    ORDER BY
+        distance_score ASC
+    LIMIT 10;
+`;
+
+      // AppDataSource.query()를 사용하여 쿼리를 실행하고 바인딩합니다.
+      let dbResult = await AppDataSource.query(selectQuery, [
+        vectorString, // $1에 이 쿼리 벡터 문자열을 바인딩하여 전달합니다.
+      ]);
+
+      // AppDataSource.query()는 배열 형태의 결과를 반환합니다.
+      dbResult = dbResult[0];
+
+      // =======================================================
+
+      result.data = dbResult;
     } else {
       // API 응답은 성공(HTTP 200)했지만, 내부 success 플래그가 false인 경우
       throw new Error(

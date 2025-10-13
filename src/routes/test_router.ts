@@ -81,8 +81,32 @@ router.get("/save_embedding_to_db", async (c) => {
       // 임베딩 벡터 (첫 번째 문서의 임베딩)
       const embeddingVector = apiResponse.data[0];
 
-      // TODO: 여기에서 데이터베이스에 임베딩 벡터를 저장하는 로직을 추가하세요.
-      // 예: await db.saveEmbedding(queryText, embeddingVector);
+      // =======================================================
+      // ⭐️ AppDataSource.query()를 사용한 Raw SQL 저장 로직
+      // =======================================================
+
+      // 1. 벡터 배열을 pgvector가 인식할 수 있는 문자열 형식으로 변환합니다.
+      //    예: [0.12, -0.45, 0.78, ...]  ->  '[0.12, -0.45, 0.78]'
+      const vectorString = `[${embeddingVector.join(",")}]`;
+
+      // 2. Raw INSERT 쿼리 실행
+      const insertQuery = `
+                INSERT INTO t_vector_test1 (content, embedding)
+                VALUES ($1, $2)
+                RETURNING id;
+            `;
+
+      // AppDataSource.query()를 사용하여 쿼리를 실행합니다.
+      // 첫 번째 인자는 SQL 쿼리, 두 번째 인자는 플레이스홀더에 바인딩할 값들의 배열입니다.
+      const dbResult = await AppDataSource.query(insertQuery, [
+        queryText,
+        vectorString,
+      ]);
+
+      // AppDataSource.query()는 배열 형태의 결과를 반환합니다.
+      const newId = dbResult[0]?.id;
+
+      // =======================================================
 
       result.data = {
         query: queryText,

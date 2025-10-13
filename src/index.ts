@@ -1,21 +1,24 @@
-import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
 import { AppDataSource } from "./data-source1.js";
 import { cors } from "hono/cors";
 import * as dotenv from "dotenv";
-import { TTest1 } from './entities/TTest1.js';
-import { error } from 'console';
-import { TTest1Child } from './entities/TTest1Child.js';
-import fileRouter from "./routes/file_router.js"
-import testRouter from "./routes/test_router.js"
+import { TTest1 } from "./entities/TTest1.js";
+import { error } from "console";
+import { TTest1Child } from "./entities/TTest1Child.js";
+import fileRouter from "./routes/file_router.js";
+import testRouter from "./routes/test_router.js";
 
 import { LMStudioClient } from "@lmstudio/sdk";
 const client = new LMStudioClient();
 
-const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
+const envFile =
+  process.env.NODE_ENV === "production"
+    ? ".env.production"
+    : ".env.development";
 dotenv.config({ path: envFile });
 
-const app = new Hono()
+const app = new Hono();
 
 app.use(cors());
 
@@ -29,8 +32,8 @@ AppDataSource.initialize()
   });
 /** DB 연결 END */
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
+app.get("/", (c) => {
+  return c.text("Hello Hono!");
 });
 
 /**
@@ -38,7 +41,7 @@ app.get('/', (c) => {
  async : 비동기 환경에서, db 접속같이 시간이 걸리는것도
  기다리게 해주는놈
  */
-app.get('/api/test', async (c) => {
+app.get("/api/test", async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,
@@ -52,12 +55,12 @@ app.get('/api/test', async (c) => {
     return c.json(result);
   } catch (error: any) {
     result.success = false;
-    result.message = `error. ${error?.message ?? ""}`
-    return c.json(result)
+    result.message = `error. ${error?.message ?? ""}`;
+    return c.json(result);
   }
 });
 
-app.get('/test2', async (c) => {
+app.get("/test2", async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,
@@ -66,17 +69,19 @@ app.get('/test2', async (c) => {
   };
   try {
     const testRepository = AppDataSource.getRepository(TTest1);
-    const data = await testRepository.find({ relations: { tTest1Children: true } });
-    result.data = data
+    const data = await testRepository.find({
+      relations: { tTest1Children: true },
+    });
+    result.data = data;
     return c.json(result);
   } catch (error: any) {
     result.success = false;
-    result.message = `error. ${error?.message ?? ""}`
-    return c.json(result)
+    result.message = `error. ${error?.message ?? ""}`;
+    return c.json(result);
   }
 });
 
-app.get('/raw_query', async (c) => {
+app.get("/raw_query", async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,
@@ -110,19 +115,19 @@ ORDER BY t1.id ASC
 OFFSET (${1} - 1) * ${100}
 LIMIT ${100}
     `;
-    result.data = data
+    result.data = data;
     return c.json(result);
   } catch (error: any) {
     result.success = false;
-    result.message = `error. ${error?.message ?? ""}`
-    return c.json(result)
+    result.message = `error. ${error?.message ?? ""}`;
+    return c.json(result);
   }
 });
 
 /**
  C : 요청, 응답을 기능들이 있는 객체 
  */
-app.post('/api/save', async (c) => {
+app.post("/api/save", async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,
@@ -136,20 +141,20 @@ app.post('/api/save', async (c) => {
     let title = String(body?.title ?? "");
     let content = String(body?.content ?? "");
     let items = body?.items;
-    console.log(`items : `, items)
+    console.log(`items : `, items);
     const testRepository = AppDataSource.getRepository(TTest1);
 
     /**
     TTest1 테이블에서 id 가 body에서 받은 id랑 똑같은 값을 가진 데이터를 하나 찾아와.
     없으면, 그냥 데이터 새로 만들어.
      */
-    let oldData = await testRepository.findOne({ where: { id: id } }) ??
-      new TTest1();
+    let oldData =
+      (await testRepository.findOne({ where: { id: id } })) ?? new TTest1();
     // 예외처리
     if (id && !oldData?.id) {
       result.success = false;
-      result.message = `없는 데이터를 수정하려고 합니다. 반려 처리 하겠습니다`
-      return c.json(result)
+      result.message = `없는 데이터를 수정하려고 합니다. 반려 처리 하겠습니다`;
+      return c.json(result);
     }
 
     oldData.title = title;
@@ -157,16 +162,16 @@ app.post('/api/save', async (c) => {
 
     // 새로운 데이터 저장 commit
     let data = await testRepository.save(oldData);
-    result.data = data
+    result.data = data;
     return c.json(result);
   } catch (error: any) {
     result.success = false;
-    result.message = `error. ${error?.message ?? ""}`
-    return c.json(result)
+    result.message = `error. ${error?.message ?? ""}`;
+    return c.json(result);
   }
 });
 
-app.post('/delete', async (c) => {
+app.post("/delete", async (c) => {
   let result: { success: boolean; data: any; code: string; message: string } = {
     success: true,
     data: null,
@@ -178,21 +183,24 @@ app.post('/delete', async (c) => {
     const body = await c?.req?.json();
     let id = Number(body?.id ?? 0);
     const testRepository = AppDataSource.getRepository(TTest1);
-    await testRepository.delete({ id: id })
+    await testRepository.delete({ id: id });
     return c.json(result);
   } catch (error: any) {
     result.success = false;
-    result.message = `error. ${error?.message ?? ""}`
-    return c.json(result)
+    result.message = `error. ${error?.message ?? ""}`;
+    return c.json(result);
   }
 });
 
-app.route('/api/file', fileRouter);
-app.route('/api/test', testRouter);
+app.route("/api/file", fileRouter);
+app.route("/api/test", testRouter);
 
-serve({
-  fetch: app.fetch,
-  port: 3001
-}, (info) => {
-  console.log(`Server is running on http://localhost:${info.port}`)
-})
+serve(
+  {
+    fetch: app.fetch,
+    port: 7860,
+  },
+  (info) => {
+    console.log(`Server is running on http://localhost:${info.port}`);
+  }
+);

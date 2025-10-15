@@ -188,7 +188,7 @@ router.get("/postgres_embedding_search", async (c) => {
     FROM
         t_vector_test1
     WHERE
-      (embedding <=> $1 ) <= 0.2 
+      (embedding <=> $1 ) <= 0.6 
     ORDER BY
         distance_score ASC
     LIMIT 10;

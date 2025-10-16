@@ -4,8 +4,8 @@ import { streamText } from "hono/streaming";
 import { z } from "zod";
 //@ts-ignore
 import path from "path";
-import { AppDataSource } from "../data-source1";
-import { TFiles } from "../entities/TFiles";
+import { AppDataSource } from "../data-source1.js";
+import { TFiles } from "../entities/TFiles.js";
 
 const router = new Hono();
 
